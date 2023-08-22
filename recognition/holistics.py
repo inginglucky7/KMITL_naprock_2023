@@ -4,6 +4,7 @@ import csv
 import numpy as np
 import os
 from mediapipe import solutions
+from mediapipe.python.solutions.pose import PoseLandmark
 
 cap = cv.VideoCapture(0)
 
@@ -67,11 +68,30 @@ with mp_holistic.Holistic(
         except():
             pass
 
-        cv.imshow("Frame", cv.flip(frame, 1))
+        numcoord = 0
 
         if results.face_landmarks:
-            print(len(results.face_landmarks.landmark))
+            numcoord += len(results.face_landmarks.landmark)
 
+        if results.pose_landmarks:
+            numcoord += len(results.pose_landmarks.landmark)
+
+        if results.right_hand_landmarks:
+            numcoord += len(results.right_hand_landmarks.landmark)
+
+        if results.left_hand_landmarks:
+            numcoord += len(results.left_hand_landmarks.landmark)
+
+        landmarks = ['class']
+        for val in range(1, numcoord+1):
+            landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
+
+        # must optimize.
+        with open('coords.csv', mode='w', newline='') as f:
+            csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(landmarks)
+
+        cv.imshow("Frame", cv.flip(frame, 1))
         if cv.waitKey(25) & 0xFF == ord('q'):
             break
 
