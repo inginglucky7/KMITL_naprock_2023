@@ -12,6 +12,9 @@ mp_drawing = solutions.drawing_utils
 mp_drawing_styles = solutions.drawing_styles
 mp_holistic = solutions.holistic
 drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=1, circle_radius=1)
+class_name = "Fist"
+
+numcoords = 0
 
 with mp_holistic.Holistic(
     min_detection_confidence=0.5,
@@ -68,28 +71,44 @@ with mp_holistic.Holistic(
         except():
             pass
 
-        numcoord = 0
-
         if results.face_landmarks:
-            numcoord += len(results.face_landmarks.landmark)
+            numcoords += len(results.face_landmarks.landmark)
 
         if results.pose_landmarks:
-            numcoord += len(results.pose_landmarks.landmark)
+            numcoords += len(results.pose_landmarks.landmark)
 
         if results.right_hand_landmarks:
-            numcoord += len(results.right_hand_landmarks.landmark)
+            numcoords += len(results.right_hand_landmarks.landmark)
 
         if results.left_hand_landmarks:
-            numcoord += len(results.left_hand_landmarks.landmark)
+            numcoords += len(results.left_hand_landmarks.landmark)
 
-        landmarks = ['class']
-        for val in range(1, numcoord+1):
-            landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
+        try:
+            pose = results.pose_landmarks.landmark
+            pose_row = list(
+                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-        # must optimize.
-        with open('coords.csv', mode='w', newline='') as f:
-            csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-            csv_writer.writerow(landmarks)
+            face = results.face_landmarks.landmark
+            face_row = list(
+                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
+
+            # r_hand = results.right_hand_landmarks.landmark
+            # r_hand_row = list(
+            #     np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in r_hand]).flatten())
+            #
+            # l_hand = results.left_hand_landmarks.landmark
+            # l_hand_row = list(
+            #     np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in l_hand]).flatten())
+
+            row = pose_row + face_row
+            row.insert(0, class_name)
+
+            with open('coords.csv', mode='a', newline='') as f:
+                csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                csv_writer.writerow(row)
+
+        except:
+            pass
 
         cv.imshow("Frame", cv.flip(frame, 1))
         if cv.waitKey(25) & 0xFF == ord('q'):
@@ -97,3 +116,4 @@ with mp_holistic.Holistic(
 
 cap.release()
 cv.destroyAllWindows()
+
