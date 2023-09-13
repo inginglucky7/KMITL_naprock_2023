@@ -3,7 +3,9 @@ import cv2 as cv
 import csv
 import numpy as np
 import os
+import imgaug.augmenters as iaa
 from mediapipe import solutions
+
 from mediapipe.python.solutions.pose import PoseLandmark
 
 cap = cv.VideoCapture("../srcVdo/Biceps.mp4")
@@ -17,6 +19,14 @@ path = "D:\Dataset\Train\Hand_Fist"
 
 numcoords = 0
 
+
+augmentation_seq = iaa.Sequential([
+    iaa.Fliplr(0.5),
+    iaa.Affine(rotate=(-10, 10)),
+    iaa.GaussianBlur(sigma=(0, 1.0)),
+    iaa.AdditiveGaussianNoise(scale=(0, 0.05 * 255))
+])
+
 with mp_holistic.Holistic(
     min_detection_confidence=0.5,
     min_tracking_confidence=0.5,
@@ -25,6 +35,7 @@ with mp_holistic.Holistic(
         # ret, frame = cap.read()
     for frame in os.listdir(path):
         frame = cv.imread(path +  "/" + frame)
+        augmentation_frame = augmentation_seq.augment_image(frame)
         imageWidth, imageHeight = frame.shape[:2]
         imgRGB = cv.cvtColor(frame, cv.COLOR_BGR2RGB)
         blackie = np.zeros(frame.shape)
@@ -112,7 +123,7 @@ with mp_holistic.Holistic(
         except:
             pass
 
-        cv.imshow("Frame", frame)
+        cv.imshow("Frame", augmentation_frame)
         if cv.waitKey(10) & 0xFF == ord('q'):
             break
 

@@ -12,7 +12,12 @@ df = pd.read_csv('../recognition/coords.csv')
 x = df.drop('class', axis=1)
 y = df['class']
 
-rf = RandomForestClassifier(random_state=1234)
+rf = RandomForestClassifier(random_state=1234,
+                            min_samples_leaf=5,
+                            max_depth=10,
+                            min_samples_split=10,
+                            max_features='sqrt'
+                            )
 
 param_dist = {
     'n_estimators': randint(50, 400),
