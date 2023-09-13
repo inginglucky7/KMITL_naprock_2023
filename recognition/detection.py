@@ -19,7 +19,7 @@ class_name = "Sad"
 
 numcoords = 0
 
-with open('../classified_func/body_language_rf.pkl', 'rb') as f:
+with open('../classified_func/body_language_kFold.pkl', 'rb') as f:
     model = pickle.load(f)
 
 with mp_holistic.Holistic(

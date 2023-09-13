@@ -12,8 +12,8 @@ mp_drawing = solutions.drawing_utils
 mp_drawing_styles = solutions.drawing_styles
 mp_holistic = solutions.holistic
 drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=1, circle_radius=1)
-class_name = "Up"
-path = "D:\Dataset\Train\Hand_FaceUp"
+class_name = "Fist"
+path = "D:\Dataset\Train\Hand_Fist"
 
 numcoords = 0
 
