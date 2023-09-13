@@ -2,7 +2,9 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import StratifiedKFold, GridSearchCV, cross_val_score, RandomizedSearchCV
 from sklearn.preprocessing import StandardScaler
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.pipeline import make_pipeline, Pipeline
+from sklearn.linear_model import LogisticRegression, RidgeClassifier, LinearRegression
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.metrics import accuracy_score
 from scipy.stats import randint
 import pickle
@@ -46,5 +48,5 @@ threshold = 0.01
 selected_features = x.columns[feature_importances > threshold]
 x_selected = x[selected_features]
 
-with open('body_language_kFold.pkl', 'wb') as f:
+with open('body_language_kFold_random.pkl', 'wb') as f:
     pickle.dump(best_rf, f)
