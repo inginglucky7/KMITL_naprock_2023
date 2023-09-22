@@ -15,7 +15,7 @@ mp_drawing_styles = solutions.drawing_styles
 mp_holistic = solutions.holistic
 drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=1, circle_radius=1)
 class_name = "Fist"
-path = "D:\Dataset\Train\Feets_only"
+path = "D:\Dataset\Train\Hand_Arm"
 
 numcoords = 0
 
@@ -96,35 +96,31 @@ with mp_holistic.Holistic(
         if results.left_hand_landmarks:
             numcoords += len(results.left_hand_landmarks.landmark)
 
-        try:
-            pose = results.pose_landmarks.landmark
-            pose_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
+        pose = results.pose_landmarks.landmark
+        pose_row = list(
+            np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-            face = results.face_landmarks.landmark
-            face_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
+        face = results.face_landmarks.landmark
+        face_row = list(
+            np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
 
-            r_hand = results.right_hand_landmarks.landmark
-            r_hand_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in r_hand]).flatten())
+        r_hand = results.right_hand_landmarks.landmark
+        r_hand_row = list(
+            np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in r_hand]).flatten())
 
-            l_hand = results.left_hand_landmarks.landmark
-            l_hand_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in l_hand]).flatten())
+        l_hand = results.left_hand_landmarks.landmark
+        l_hand_row = list(
+            np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in l_hand]).flatten())
 
-            row = pose_row + face_row + r_hand_row + l_hand_row
-            row.insert(0, class_name)
+        row = pose_row + face_row + r_hand_row + l_hand_row
+        row.insert(0, class_name)
 
-            with open('coords.csv', mode='a', newline='') as f:
-                csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
-                csv_writer.writerow(row)
-
-        except:
-            pass
+        with open('coords.csv', mode='a', newline='') as f:
+            csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+            csv_writer.writerow(row)
 
         cv.imshow("Frame", augmentation_frame)
-        if cv.waitKey(10) & 0xFF == ord('q'):
+        if cv.waitKey(0) & 0xFF == ord('q'):
             break
 
 cap.release()
