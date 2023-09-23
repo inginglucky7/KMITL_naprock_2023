@@ -6,7 +6,7 @@ import os
 from mediapipe import solutions
 from mediapipe.python.solutions.pose import PoseLandmark
 
-cap = cv.VideoCapture("D:\Dataset\Train/New Dataset\IMG_20230919_151001_009.jpg")
+cap = cv.VideoCapture(0)
 
 mp_drawing = solutions.drawing_utils
 mp_drawing_styles = solutions.drawing_styles
@@ -107,7 +107,7 @@ with mp_holistic.Holistic(
             pass
 
         cv.imshow("Frame", frame)
-        if cv.waitKey(0) & 0xFF == ord('q'):
+        if cv.waitKey(10) & 0xFF == ord('q'):
             break
 
 cap.release()

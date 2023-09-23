@@ -1,3 +1,11 @@
-version https://git-lfs.github.com/spec/v1
-oid sha256:7be9b91035c5d955e38455d14f5b65467af2ee47639e8f74cb69d71d202ddb6a
-size 372
+import csv
+import os
+import numpy as np
+
+landmarks = ['class']
+# 33, 502, 544 pose = 33, hand = 42, face = 478
+for val in range(1, 76):
+    landmarks += ['x{}'.format(val), 'y{}'.format(val), 'z{}'.format(val), 'v{}'.format(val)]
+with open('coords.csv', mode='a', newline='') as f:
+    csv_writer = csv.writer(f, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+    csv_writer.writerow(landmarks)
