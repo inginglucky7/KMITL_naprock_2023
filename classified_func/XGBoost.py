@@ -5,17 +5,16 @@ from xgboost import XGBClassifier
 from sklearn.metrics import accuracy_score
 import pickle
 
-# Load your dataset (change the file path accordingly)
 df = pd.read_csv('../recognition/coords.csv')
 
-# Separate features (x) and target (y)
 class_label_mapping = {
     'Arm': 0,
-    'Calves': 1,
-    'Feet': 2,
-    'Fist': 3,
-    'HDown': 4,
-    'Thighs': 5
+    'BF_Hug': 1,
+    'Calves': 2,
+    'Feet': 3,
+    'Fist': 4,
+    'Shoulder': 5,
+    'Thighs': 6
 }
 
 x = df.drop('class', axis=1)

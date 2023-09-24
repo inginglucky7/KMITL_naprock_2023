@@ -1,21 +1,17 @@
-import mediapipe as mp
 import cv2 as cv
 import csv
 import numpy as np
 import os
 import imgaug.augmenters as iaa
 from mediapipe import solutions
-
-from mediapipe.python.solutions.pose import PoseLandmark
-
 cap = cv.VideoCapture("../srcVdo/Biceps.mp4")
 
 mp_drawing = solutions.drawing_utils
 mp_drawing_styles = solutions.drawing_styles
 mp_holistic = solutions.holistic
 drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=1, circle_radius=1)
-class_name = "Fist"
-path = "D:\Dataset\Dataset\Train\Hand_Arm"
+class_name = "BF_Hug"
+path = "D:\Dataset\Dataset\Train\Butterfly_Hug"
 
 numcoords = 0
 
@@ -40,13 +36,13 @@ with mp_holistic.Holistic(
         image.flags.writeable = True
         image = cv.cvtColor(augmentation_frame, cv.COLOR_RGB2BGR)
 
-        mp_drawing.draw_landmarks(
-            image,
-            results.face_landmarks,
-            mp_holistic.FACEMESH_CONTOURS,
-            landmark_drawing_spec=drawing_spec,
-            connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_contours_style()
-        )
+        # mp_drawing.draw_landmarks(
+        #     image,
+        #     results.face_landmarks,
+        #     mp_holistic.FACEMESH_CONTOURS,
+        #     landmark_drawing_spec=drawing_spec,
+        #     connection_drawing_spec=mp_drawing_styles.get_default_face_mesh_contours_style()
+        # )
 
         mp_drawing.draw_landmarks(
             image,
@@ -69,8 +65,8 @@ with mp_holistic.Holistic(
             landmark_drawing_spec=mp_drawing_styles.get_default_hand_landmarks_style()
         )
 
-        if results.face_landmarks:
-            numcoords += len(results.face_landmarks.landmark)
+        # if results.face_landmarks:
+        #     numcoords += len(results.face_landmarks.landmark)
 
         if results.pose_landmarks:
             numcoords += len(results.pose_landmarks.landmark)
@@ -86,9 +82,9 @@ with mp_holistic.Holistic(
             pose_row = list(
                 np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-            face = results.face_landmarks.landmark
-            face_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
+            # face = results.face_landmarks.landmark
+            # face_row = list(
+            #     np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
 
             r_hand = results.right_hand_landmarks.landmark
             r_hand_row = list(
@@ -98,7 +94,7 @@ with mp_holistic.Holistic(
             l_hand_row = list(
                 np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in l_hand]).flatten())
 
-            row = pose_row + face_row + r_hand_row + l_hand_row
+            row = pose_row + r_hand_row + l_hand_row
             row.insert(0, class_name)
 
             with open('coords.csv', mode='a', newline='') as f:

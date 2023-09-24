@@ -18,7 +18,7 @@ drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=1, circle_radi
 
 numcoords = 0
 
-with open('../classified_func/body_language_rf.pkl', 'rb') as f:
+with open('../classified_func/body_language_kFold_xgb.pkl', 'rb') as f:
     model = pickle.load(f)
 
 with mp_holistic.Holistic(
@@ -40,14 +40,14 @@ with mp_holistic.Holistic(
             frame.flags.writeable = True
             image = cv.cvtColor(frame, cv.COLOR_RGB2BGR)
 
-            mp_drawing.draw_landmarks(
-                frame,
-                results.face_landmarks,
-                mp_holistic.FACEMESH_CONTOURS,
-                landmark_drawing_spec=drawing_spec,
-                connection_drawing_spec=mp_drawing_styles
-                .get_default_face_mesh_contours_style()
-            )
+            # mp_drawing.draw_landmarks(
+            #     frame,
+            #     results.face_landmarks,
+            #     mp_holistic.FACEMESH_CONTOURS,
+            #     landmark_drawing_spec=drawing_spec,
+            #     connection_drawing_spec=mp_drawing_styles
+            #     .get_default_face_mesh_contours_style()
+            # )
 
             mp_drawing.draw_landmarks(
                 frame,
@@ -76,42 +76,40 @@ with mp_holistic.Holistic(
         except():
             pass
 
-        if results.face_landmarks:
-            numcoords += len(results.face_landmarks.landmark)
+        # if results.face_landmarks:
+        #     numcoords += len(results.face_landmarks.landmark)
+        #     face = results.face_landmarks.landmark
+        #     face_row = list(
+        #         np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
 
         if results.pose_landmarks:
             numcoords += len(results.pose_landmarks.landmark)
-
-        if results.right_hand_landmarks:
-            numcoords += len(results.right_hand_landmarks.landmark)
-
-        if results.left_hand_landmarks:
-            numcoords += len(results.left_hand_landmarks.landmark)
-
-        try:
             pose = results.pose_landmarks.landmark
             pose_row = list(
                 np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in pose]).flatten())
 
-            face = results.face_landmarks.landmark
-            face_row = list(
-                np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in face]).flatten())
-
+        if results.right_hand_landmarks:
+            numcoords += len(results.right_hand_landmarks.landmark)
             r_hand = results.right_hand_landmarks.landmark
             r_hand_row = list(
                 np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in r_hand]).flatten())
 
+        if results.left_hand_landmarks:
+            numcoords += len(results.left_hand_landmarks.landmark)
             l_hand = results.left_hand_landmarks.landmark
             l_hand_row = list(
                 np.array([[landmark.x, landmark.y, landmark.z, landmark.visibility] for landmark in l_hand]).flatten())
+        else:
+            pose = None
 
-            row = pose_row + face_row + r_hand_row + l_hand_row
+        if pose is not None:
+            row = pose_row + r_hand_row + l_hand_row
             X_data = pd.DataFrame([row])
             body_language_class = model.predict(X_data)[0]
             body_language_prob = model.predict_proba(X_data)[0]
             print(body_language_class, body_language_prob)
 
-            # Grab ear coords
+        # Grab ear coords
             coords = tuple(np.multiply(
                 np.array(
                     (results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EAR].x,
@@ -140,8 +138,6 @@ with mp_holistic.Holistic(
                         , (15, 12), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
             cv2.putText(frame, str(round(body_language_prob[np.argmax(body_language_prob)], 2))
                         , (10, 40), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
-        except:
-            pass
 
         cv.imshow("Frame", frame)
         if cv.waitKey(10) & 0xFF == ord('q'):
