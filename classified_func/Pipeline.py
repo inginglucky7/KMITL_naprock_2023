@@ -8,7 +8,6 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.pipeline import Pipeline
 import pickle
 
-# Load your dataset (change the file path accordingly)
 df = pd.read_csv('../recognition/coords.csv')
 
 x = df.drop('class', axis=1)
