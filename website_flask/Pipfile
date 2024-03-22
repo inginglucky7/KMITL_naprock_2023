@@ -1,0 +1,18 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+opencv-python = "*"
+scikit-learn = "*"
+mediapipe = "*"
+flask-wtf = "*"
+pandas = "*"
+moviepy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"
