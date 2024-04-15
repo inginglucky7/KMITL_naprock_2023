@@ -11,6 +11,9 @@ mediapipe = "*"
 flask-wtf = "*"
 pandas = "*"
 moviepy = "*"
+pathlib = "*"
+ffmpeg-python = "*"
+exifread = "*"
 
 [dev-packages]
 

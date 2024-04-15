@@ -7,14 +7,39 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <link href="{{url_for('static',filename='css/output.css')}}" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
         <title>Video Streaming</title>
     </head>
     <body>
         <h1>Uploaded Video</h1>
-        <video width="320" height="240" controls>
+        <video width="640" height="480" controls>
             <source src="{{ url_for('static', filename='files/' + filename)}}" type="video/mp4">
             Your browser does not support
         </video>
-        <p>Filename: {{ filename }}</p>
+        <p>Filename: {{filename}}</p>
+        <p>Clip Duration : {{duration}} <br/> Create Date : {{create_date}}</p>
+        {% for key, value in probs.items() %}
+            <li>{{ key }}: {{ value[1] }}</li>
+        {% endfor %}
+
+        <button class="bg-red-600" id="img_export">Export</button>
+
+        <script>
+            $(document).ready(function() {
+                $('#img_export').click(function() {
+                    $.ajax({
+                        type: 'POST',
+                        url: '/img_export',
+                        success: function(response) {
+                            console.log(response.filename);
+                        },
+                        error: function(error) {
+                            console.log(error);
+                            // Handle errors here
+                        }
+                    });
+                });
+            });
+            </script>
     </body>
 </html>

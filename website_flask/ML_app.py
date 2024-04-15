@@ -2,14 +2,19 @@ import sys
 import cv2
 import mediapipe as mp
 import cv2 as cv
-import csv
 import numpy as np
-import os
 import pickle
 import pandas as pd
-import datetime
+import json
+import os
+import ffmpeg
+import random
+from flask import session
+from PIL import Image, ImageFont, ImageDraw
 from mediapipe import solutions
+from PIL import Image
 from mediapipe.python.solutions.pose import PoseLandmark
+from moviepy.editor import VideoFileClip
 sys.path.append("/naprock_classified/KMITL_naprock_2023/")
 
 cap = cv.VideoCapture(0)
@@ -22,20 +27,31 @@ mp_holistic = solutions.holistic
 drawing_spec = mp_drawing.DrawingSpec(color=(80,110,10),thickness=0.5, circle_radius=0.5)
 
 # detection open file and var zone
-df = pd.read_csv('..\\AI\\recognition\\coords.csv')
+df = pd.read_csv('D:\\naprock_classified\\KMITL_naprock_2023\\AI\\recognition\\coords.csv')
 numcoords = 0
 test_x = df.values
 
-with open('..\\AI\\Model\\ensemble_classifier.pkl', 'rb') as f:
+avg_probs = {}
+threshold_great = 80
+threshold_good = 30
+threshold_OK = 5
+
+with open('D:/naprock_classified/KMITL_naprock_2023/ensemble_classifier.pkl', 'rb') as f:
     model = pickle.load(f)
 
 def prob_export(video):
+    body_language_class = ""
+    body_language_prob = ""
+    avg_probs = {}
+    text_score = ""
     cap_vid = cv.VideoCapture(video)
+    frame_count = 0
+    frames_with_landmarks = []
     with mp_holistic.Holistic(
         min_detection_confidence=0.5,
         min_tracking_confidence=0.5,
     ) as holistic:
-        while video.isOpened():
+        while cap_vid.isOpened():
             try:
                 ret, frame = cap_vid.read()
                 if not ret:
@@ -72,6 +88,9 @@ def prob_export(video):
             except():
                 pass
             
+            if results.pose_landmarks and results.right_hand_landmarks and results.left_hand_landmarks:
+                frames_with_landmarks.append((frame_count, frame))
+            
             try:
                 if results.pose_landmarks:
                     pose = results.pose_landmarks.landmark
@@ -93,12 +112,33 @@ def prob_export(video):
                 if pose is not None:
                     row = pose_row + r_hand_row + l_hand_row
                     X_data = pd.DataFrame([row])
-                    print(X_data.values)
+                    # print(X_data.values)
                     body_language_class = model.predict(X_data.values)[0]
                     body_language_prob = model.predict_proba(X_data)[0]
-                    print(body_language_class, body_language_prob)
+
+                    # if body_language_class not in avg_probs:
+                    #     avg_probs[body_language_class] = np.max(body_language_prob)
+                    # else:
+                    #     avg_probs[body_language_class] += np.max(body_language_prob)
                     
-                # Grab ear coords
+                    max_prob = np.max(body_language_prob)
+                    
+                    if body_language_class not in avg_probs and body_language_class != "Feet":
+                        avg_probs[body_language_class] = (max_prob, text_score)
+                    elif avg_probs[body_language_class][0] + max_prob / 7 >= threshold_great:
+                        text_score = "GREAT"
+                        avg_probs[body_language_class] = (avg_probs[body_language_class][0] + max_prob / 7, text_score)
+                    elif threshold_good <= avg_probs[body_language_class][0] + max_prob / 7 < threshold_great:
+                        text_score = "GOOD"
+                        avg_probs[body_language_class] = (avg_probs[body_language_class][0] + max_prob / 7, text_score)
+                    elif threshold_OK <= avg_probs[body_language_class][0] + max_prob / 7 < threshold_good:
+                        text_score = "OK"
+                        avg_probs[body_language_class] = (avg_probs[body_language_class][0] + max_prob / 7, text_score)
+                    else:
+                        text_score = "OK"
+                        avg_probs[body_language_class] = (avg_probs[body_language_class][0] + max_prob / 7, text_score)
+                    
+                # Grab ear coords หาโคออของหูเพื่อเอาไปแปะ Not used
                     coords = tuple(np.multiply(
                         np.array(
                             (results.pose_landmarks.landmark[mp_holistic.PoseLandmark.LEFT_EAR].x,
@@ -126,14 +166,49 @@ def prob_export(video):
                                 , (15, 12), cv.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 0), 1, cv.LINE_AA)
                     cv2.putText(frame, str(round(body_language_prob[np.argmax(body_language_prob)], 2))
                                 , (10, 40), cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2, cv.LINE_AA)
-
+                    
             except Exception as e:
                 print(e)
                 pass
-
+            
             cv.imshow("Frame", frame)
             if cv.waitKey(10) & 0xFF == ord('q'):
                 break
-    video.release()
+    cap_vid.release()
     cv.destroyAllWindows()
-    return body_language_class, body_language_prob
+    if frames_with_landmarks:
+        path = "static/files"
+        random_frame, selected_frame = random.choice(frames_with_landmarks)
+        filename = f"selected_frame.jpg"
+        file_path = os.path.join(path, filename)
+        cv.imwrite(file_path, selected_frame)
+        print(file_path)
+    return avg_probs, file_path
+    
+
+def get_video_metadata(video_path):
+    metadata = ffmpeg.probe(video_path)
+    format_metadata = metadata['format']
+    clip_duration = json.dumps(format_metadata["duration"])
+    creation_time = json.dumps(format_metadata["tags"]["creation_time"])
+    return clip_duration, creation_time
+
+def generate_image(filename, duration, create_date, probs, frame_path):
+    img = Image.new('RGB', (800, 600), color='white')
+    draw = ImageDraw.Draw(img)
+    font = ImageFont.truetype("arial.ttf", 16)
+    draw.text((50, 50), f"Filename: {filename}", fill='black', font=font)
+    draw.text((50, 75), f"Duration: {duration}", fill='black', font=font)
+    draw.text((50, 100), f"Create Date: {create_date}", fill='black', font=font)
+    draw.text((50, 125), "Probabilities:", fill='black', font=font)
+    y_offset = 150
+    
+    for key, value in probs.items():
+        draw.text((50, y_offset), f"{key}: {value[1]}", fill='black', font=font)
+        y_offset += 25
+        
+    frame_img = Image.open(frame_path)
+    frame_position = (50, y_offset)
+    frame_img.thumbnail((300, 100)) 
+    img.paste(frame_img, frame_position)
+    return img
